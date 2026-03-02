@@ -1,0 +1,94 @@
+:root {
+  --boardSize: 90vmin;
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #111;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+header {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  align-items: center;
+}
+
+button,
+select {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #2979ff;
+  color: white;
+  cursor: pointer;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+}
+
+#board {
+  width: var(--boardSize);
+  height: var(--boardSize);
+  background: #222;
+  position: relative;
+  border-radius: 12px;
+}
+
+.piece {
+  position: absolute;
+  background-size: var(--boardSize);
+  border-radius: 6px;
+  touch-action: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  cursor: grab;
+  transition: box-shadow 0.2s;
+}
+
+.hint {
+    background: rgba(255,255,255,0.3);
+    border: 2px dashed white;
+    box-sizing: border-box;
+    animation: fadeOut 2s forwards;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.correct {
+  z-index: 1; /* Keep correct pieces on top */
+  box-shadow: none;
+}
+
+.snapped {
+  animation: pop 0.2s ease-out;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+#win {
+  display: none;
+  font-size: 32px;
+  margin-top: 20px;
+}

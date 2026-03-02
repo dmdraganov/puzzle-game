@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Puzzle Game</title>
+
+    <link rel="stylesheet" href="src/styles/main.css" />
+  </head>
+
+  <body>
+    <header>
+      <select id="difficulty">
+        <option value="3">Легко</option>
+        <option value="4">Средне</option>
+        <option value="6">Сложно</option>
+      </select>
+
+      <button id="newGame">Новая игра</button>
+      <button id="hint">Подсказка</button>
+      <label class="checkbox-label">
+        <input type="checkbox" id="timeTrial" />
+        На время
+      </label>
+    </header>
+
+    <div id="board"></div>
+
+    <div id="stats">
+      ⏱ <span id="timer">0</span> ⭐ <span id="score">0</span>
+    </div>
+
+    <div id="win">Пазл собран!</div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
