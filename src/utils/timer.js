@@ -9,31 +9,31 @@ export default class Timer {
 
   start(startTime = null) {
     this.stop();
-    
+
     if (startTime) {
-        this.time = startTime;
-        this.isCountdown = true;
+      this.time = startTime;
+      this.isCountdown = true;
     } else {
-        this.time = 0;
-        this.isCountdown = false;
+      this.time = 0;
+      this.isCountdown = false;
     }
 
-    if (this.onTick) this.onTick(this.time);
+    if (this.onTick) this.onTick(this.#format(this.time));
 
     this.interval = setInterval(() => {
       if (this.isCountdown) {
         this.time--;
         if (this.time < 0) {
-            this.time = 0;
-            this.stop();
-            if (this.onEnd) this.onEnd();
+          this.time = 0;
+          this.stop();
+          if (this.onEnd) this.onEnd();
         }
       } else {
         this.time++;
       }
 
       if (this.onTick) {
-        this.onTick(this.time);
+        this.onTick(this.#format(this.time));
       }
     }, 1000);
   }
@@ -45,5 +45,13 @@ export default class Timer {
   reset() {
     this.time = 0;
     this.stop();
+  }
+
+  #format(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
   }
 }

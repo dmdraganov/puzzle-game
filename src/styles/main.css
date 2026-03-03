@@ -30,18 +30,30 @@ select {
 }
 
 .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
 }
 
 #board {
   width: var(--boardSize);
   height: var(--boardSize);
-  background: #222;
+  background-color: #222;
   position: relative;
   border-radius: 12px;
+  background-image:
+    repeating-linear-gradient(
+      rgba(255, 255, 255, 0.1) 0 1px,
+      transparent 1px 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.1) 0 1px,
+      transparent 1px 100%
+    );
+  background-size: calc(var(--boardSize) / var(--grid-size))
+    calc(var(--boardSize) / var(--grid-size));
 }
 
 .piece {
@@ -49,18 +61,18 @@ select {
   background-size: var(--boardSize);
   border-radius: 6px;
   touch-action: none;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
   cursor: grab;
   transition: box-shadow 0.2s;
 }
 
 .hint {
-    background: rgba(255,255,255,0.3);
-    border: 2px dashed white;
-    box-sizing: border-box;
-    animation: fadeOut 2s forwards;
-    pointer-events: none;
-    z-index: 1000;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px dashed white;
+  box-sizing: border-box;
+  animation: fadeOut 2s forwards;
+  pointer-events: none;
+  z-index: 1000;
 }
 
 .correct {
@@ -82,9 +94,15 @@ select {
 }
 
 @keyframes fadeOut {
-    0% { opacity: 1; }
-    80% { opacity: 1; }
-    100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 #win {

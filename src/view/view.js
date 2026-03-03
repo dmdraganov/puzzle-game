@@ -59,6 +59,7 @@ export default class View {
     const grid = parseInt(gridValue);
     this.boardSize = this.ui.board.clientWidth;
     this.pieceSize = this.boardSize / grid;
+    this.ui.board.style.setProperty("--grid-size", grid);
     this.timer.reset();
     this.hideWin();
     const pieces = this.game.start(grid);
@@ -109,6 +110,7 @@ export default class View {
     this.ui.timeTrial.checked = isTimeTrial;
     this.boardSize = this.ui.board.clientWidth;
     this.pieceSize = this.boardSize / gameState.grid;
+    this.ui.board.style.setProperty("--grid-size", gameState.grid);
     this.hideWin();
     const pieces = this.game.start(
       gameState.grid,
@@ -142,6 +144,7 @@ export default class View {
     const grid = this.game.grid;
     this.boardSize = this.ui.board.clientWidth;
     this.pieceSize = this.boardSize / grid;
+    this.ui.board.style.setProperty("--grid-size", grid);
     for (const pieceView of this.pieceViewData.values()) {
       pieceView.size = this.pieceSize;
       if (pieceView.piece.correct) {
@@ -157,7 +160,6 @@ export default class View {
     if (!pieceView || pieceView.piece.correct) return;
     const pieceCenterX = pieceView.posX + pieceView.size / 2;
     const pieceCenterY = pieceView.posY + pieceView.size / 2;
-    let isCorrectDrop = false;
 
     if (
       pieceCenterX > 0 &&
@@ -171,7 +173,6 @@ export default class View {
       pieceView.posY = gridY * this.pieceSize;
       this.updateElementPosition(pieceView);
       if (this.game.isCorrectPosition(pieceId, gridX, gridY)) {
-        isCorrectDrop = true;
         this.game.setPieceCorrect(pieceId, true);
         this.updateScore(this.game.getScore());
         this.animateCorrectPlacement(pieceView);
@@ -188,9 +189,6 @@ export default class View {
     } else {
       this.saveState();
     }
-    if (!isCorrectDrop) {
-      this.audio.playDrop();
-    }
   }
 
   initDragEvents() {
@@ -200,7 +198,6 @@ export default class View {
       const pieceId = parseInt(pieceEl.dataset.id);
       const pieceView = this.pieceViewData.get(pieceId);
       if (pieceView && !pieceView.piece.correct) {
-        this.audio.playPickUp();
         pieceView.element.style.zIndex = 100;
         const boardRect = this.ui.board.getBoundingClientRect();
         const mouseX = e.clientX - boardRect.left;
@@ -224,7 +221,6 @@ export default class View {
         const pieceView = this.pieceViewData.get(pieceId);
 
         if (pieceView && !pieceView.piece.correct) {
-          this.audio.playPickUp();
           pieceView.element.style.zIndex = 100;
           const boardRect = this.ui.board.getBoundingClientRect();
 
@@ -330,7 +326,7 @@ export default class View {
   }
 
   render() {
-    this.ui.board.innerHTML = "";
+    this.ui.board.innerHTML = '';
     for (const pieceView of this.pieceViewData.values()) {
       const el = this.createPieceElement(pieceView);
       pieceView.element = el;
