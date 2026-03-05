@@ -1,7 +1,7 @@
 import { clamp } from "../utils/utils.js";
 import Timer from "../utils/timer.js";
 import storage from "../utils/storage.js";
-import Audio from "../utils/audio.js";
+import AudioPlayer from "../utils/audio.js";
 
 class PieceView {
   constructor(piece, size, image) {
@@ -19,7 +19,7 @@ export default class View {
   pieceViewData = new Map();
   pieceSize = 0;
   boardSize = 0;
-  audio = new Audio();
+  audioPlayer = new AudioPlayer();
 
   constructor(game, uiIds) {
     this.game = game;
@@ -176,7 +176,7 @@ export default class View {
         this.game.setPieceCorrect(pieceId, true);
         this.updateScore(this.game.getScore());
         this.animateCorrectPlacement(pieceView);
-        this.audio.playCorrect();
+        this.audioPlayer.playCorrect();
         if (navigator.vibrate) navigator.vibrate(40);
         if (this.game.checkWin()) {
           this.timer.stop();
@@ -326,7 +326,7 @@ export default class View {
   }
 
   render() {
-    this.ui.board.innerHTML = '';
+    this.ui.board.innerHTML = "";
     for (const pieceView of this.pieceViewData.values()) {
       const el = this.createPieceElement(pieceView);
       pieceView.element = el;
@@ -363,7 +363,7 @@ export default class View {
   }
 
   showWin() {
-    this.audio.playWin();
+    this.audioPlayer.playWin();
     this.ui.win.style.display = "block";
     this.ui.win.textContent = "Пазл собран!";
   }

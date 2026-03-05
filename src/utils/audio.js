@@ -1,11 +1,16 @@
-export default class Audio {
+export default class AudioPlayer {
+  correctSound = new Audio("/src/assets/correct.mp3");
+  winSound = new Audio("/src/assets/win.mp3");
+
   constructor() {}
 
-  #play() {}
-
   playCorrect() {
-    this.#play();
+    this.correctSound.volume = 0.2;
+    return this.correctSound.play();
   }
 
-  playWin() {}
+  playWin() {
+    this.winSound.volume = 0.5;
+    return this.winSound.play();
+  }
 }
