@@ -5,9 +5,19 @@ export default class Game {
     this.pieces = [];
     this.grid = 3;
     this.score = 0;
-    this.image = "https://picsum.photos/800";
+    this.image = null;
     this.hintsUsed = 0;
     this.maxHints = 3;
+    this.images = [
+      "src/assets/images/autumn.jpg",
+      "src/assets/images/beach.jpg",
+      "src/assets/images/desert.jpg",
+      "src/assets/images/desktop.jpg",
+      "src/assets/images/forest.jpg",
+      "src/assets/images/kozel.jpg",
+      "src/assets/images/street.jpg",
+      "src/assets/images/files.jpg",
+    ];
   }
 
   start(
@@ -21,7 +31,7 @@ export default class Game {
     this.hintsUsed = savedState.hintsUsed;
 
     if (savedPieces) {
-      this.image = savedImage || this.image;
+      this.image = savedImage || this.images[0];
       this.pieces = savedPieces.map((p) => {
         const piece = new Piece(p.position, p.id);
         piece.correct = p.correct;
@@ -30,7 +40,7 @@ export default class Game {
     } else {
       this.score = 0; // Reset score only on a new game
       this.hintsUsed = 0;
-      this.image = "https://picsum.photos/800?" + new Date().getTime();
+      this.image = this.images[Math.floor(Math.random() * this.images.length)];
       this.createPieces();
     }
     return this.pieces;
