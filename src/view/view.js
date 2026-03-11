@@ -44,6 +44,9 @@ export default class View {
     this.ui.difficulty.addEventListener("change", handleSettingsChange);
     this.ui.gameMode.addEventListener("change", handleSettingsChange);
     this.ui.hint.addEventListener("click", () => this.showHint());
+    this.ui.newGameButton.addEventListener("click", () =>
+      this.start(this.ui.difficulty.value, true),
+    );
 
     this.initDragEvents();
     this.loadState() || this.start(this.ui.difficulty.value, true);
@@ -68,6 +71,7 @@ export default class View {
     this.hideWin();
     const pieces = this.game.start(grid);
     this.updateScore(this.game.getScore());
+    this.updateHints(this.game.getHintsRemaining());
     this.pieceViewData.clear();
     for (const piece of pieces) {
       const pieceView = new PieceView(piece, this.pieceSize, this.game.image);
@@ -127,10 +131,11 @@ export default class View {
     const pieces = this.game.start(
       gameState.grid,
       gameState.pieces,
-      gameState.score,
+      gameState,
       gameState.image,
     );
     this.updateScore(this.game.getScore());
+    this.updateHints(this.game.getHintsRemaining());
     this.pieceViewData.clear();
     for (const piece of pieces) {
       const pieceView = new PieceView(piece, this.pieceSize, this.game.image);
@@ -381,6 +386,11 @@ export default class View {
     this.ui.score.textContent = score;
   }
 
+  updateHints(count) {
+    this.ui.hintsRemaining.textContent = count;
+    this.ui.hint.disabled = count <= 0;
+  }
+
   showWin() {
     this.audioPlayer.playWin();
     this.ui.win.classList.add("show");
@@ -399,6 +409,9 @@ export default class View {
   showHint() {
     const hintPiece = this.game.getHint();
     if (!hintPiece) return;
+
+    this.updateHints(this.game.getHintsRemaining());
+
     if (this.ui.gameMode.value === "time") {
       this.timer.time -= 5; // Penalty for time trial
     } else {

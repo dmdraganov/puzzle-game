@@ -6,11 +6,20 @@ export default class Game {
     this.grid = 3;
     this.score = 0;
     this.image = "https://picsum.photos/800";
+    this.hintsUsed = 0;
+    this.maxHints = 3;
   }
 
-  start(grid, savedPieces = null, savedScore = 0, savedImage = null) {
+  start(
+    grid,
+    savedPieces = null,
+    savedState = { score: 0, hintsUsed: 0 },
+    savedImage = null,
+  ) {
     this.grid = grid;
-    this.score = savedScore;
+    this.score = savedState.score;
+    this.hintsUsed = savedState.hintsUsed;
+
     if (savedPieces) {
       this.image = savedImage || this.image;
       this.pieces = savedPieces.map((p) => {
@@ -20,6 +29,7 @@ export default class Game {
       });
     } else {
       this.score = 0; // Reset score only on a new game
+      this.hintsUsed = 0;
       this.image = "https://picsum.photos/800?" + new Date().getTime();
       this.createPieces();
     }
@@ -38,7 +48,7 @@ export default class Game {
   }
 
   setPieceCorrect(pieceId, isCorrect) {
-    const piece = this.pieces.find(p => p.id === pieceId);
+    const piece = this.pieces.find((p) => p.id === pieceId);
     if (piece && piece.correct !== isCorrect) {
       piece.correct = isCorrect;
       if (isCorrect) {
@@ -48,7 +58,7 @@ export default class Game {
   }
 
   isCorrectPosition(pieceId, gridX, gridY) {
-    const piece = this.pieces.find(p => p.id === pieceId);
+    const piece = this.pieces.find((p) => p.id === pieceId);
     if (!piece) return false;
     return piece.position.x === gridX && piece.position.y === gridY;
   }
@@ -65,8 +75,18 @@ export default class Game {
   }
 
   getHint() {
-    const incorrectPiece = this.pieces.find(p => !p.correct);
+    if (this.hintsUsed >= this.maxHints) {
+      return null;
+    }
+    const incorrectPiece = this.pieces.find((p) => !p.correct);
+    if (incorrectPiece) {
+      this.hintsUsed++;
+    }
     return incorrectPiece;
+  }
+
+  getHintsRemaining() {
+    return this.maxHints - this.hintsUsed;
   }
 
   getPieces() {
@@ -76,13 +96,14 @@ export default class Game {
   getScore() {
     return this.score;
   }
-  
+
   getState() {
     return {
       grid: this.grid,
       pieces: this.pieces,
       score: this.score,
       image: this.image,
+      hintsUsed: this.hintsUsed,
     };
   }
 }

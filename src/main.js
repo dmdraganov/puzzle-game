@@ -8,8 +8,10 @@ const uiIds = {
   win: "win",
   newGame: "newGame",
   hint: "hint",
+  hintsRemaining: "hintsRemaining",
   gameMode: "gameMode",
   difficulty: "difficulty",
+  newGameButton: "newGameButton",
 };
 
 const game = new Game();

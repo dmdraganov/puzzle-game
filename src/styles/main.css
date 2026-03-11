@@ -28,6 +28,11 @@ select {
   color: white;
   cursor: pointer;
 }
+
+#newGameButton {
+  background: #00c853;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;
