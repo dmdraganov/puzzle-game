@@ -10,28 +10,30 @@
   </head>
 
   <body>
-    <header>
-      <select id="difficulty">
-        <option value="3">Легко</option>
-        <option value="4">Средне</option>
-        <option value="6">Сложно</option>
-      </select>
-
-      <button id="newGame">Новая игра</button>
-      <button id="hint">Подсказка</button>
-      <label class="checkbox-label">
-        <input type="checkbox" id="timeTrial" />
-        На время
-      </label>
-    </header>
-
     <div id="board"></div>
 
     <div id="stats">
       ⏱ <span id="timer">0</span> ⭐ <span id="score">0</span>
+      <button id="hint">Подсказка</button>
     </div>
 
-    <div id="win">Пазл собран!</div>
+    <div id="win">
+      <div id="win-text"></div>
+      <div id="win-controls">
+        <div class="win-controls-group">
+          <select id="difficulty">
+            <option value="3">Легко</option>
+            <option value="4">Средне</option>
+            <option value="6">Сложно</option>
+          </select>
+          <select id="gameMode">
+            <option value="free">Свободный режим</option>
+            <option value="time">На время</option>
+          </select>
+        </div>
+        <button id="newGame">Новая игра</button>
+      </div>
+    </div>
 
     <script type="module" src="src/main.js"></script>
   </body>

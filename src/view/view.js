@@ -24,6 +24,7 @@ export default class View {
   constructor(game, uiIds) {
     this.game = game;
     this.ui = View.#getUiElements(uiIds);
+    this.ui.winText = this.ui.win.querySelector("#win-text");
     this.timer = new Timer(
       (time) => this.updateTime(time),
       () => this.showGameOver(),
@@ -33,12 +34,15 @@ export default class View {
     this.ui.newGame.addEventListener("click", () =>
       this.start(this.ui.difficulty.value, true),
     );
-    this.ui.difficulty.addEventListener("change", (e) =>
-      this.start(e.target.value, true),
-    );
-    this.ui.timeTrial.addEventListener("change", () =>
-      this.start(this.ui.difficulty.value, true),
-    );
+
+    const handleSettingsChange = () => {
+      if (!this.ui.win.classList.contains("show")) {
+        this.start(this.ui.difficulty.value, true);
+      }
+    };
+
+    this.ui.difficulty.addEventListener("change", handleSettingsChange);
+    this.ui.gameMode.addEventListener("change", handleSettingsChange);
     this.ui.hint.addEventListener("click", () => this.showHint());
 
     this.initDragEvents();
@@ -73,7 +77,7 @@ export default class View {
     }
     this.render();
 
-    if (this.ui.timeTrial.checked) {
+    if (this.ui.gameMode.value === "time") {
       const startTime = grid * grid * 5;
       this.timer.start(startTime);
     } else {
@@ -90,24 +94,32 @@ export default class View {
         posY: pieceView.posY,
       });
     }
-    const isTimeTrial = this.ui.timeTrial.checked;
+    const gameMode = this.ui.gameMode.value;
     storage.save({
       gameState: this.game.getState(),
       viewState,
       time: this.timer.time,
-      isTimeTrial,
+      gameMode,
     });
   }
 
   loadState() {
     const savedState = storage.load();
-    if (!savedState || !savedState.gameState || Array.isArray(savedState)) {
+    if (
+      !savedState ||
+      !savedState.gameState ||
+      !savedState.gameState.image ||
+      Array.isArray(savedState)
+    ) {
       storage.save(null);
       return false;
     }
-    const { gameState, viewState, time, isTimeTrial } = savedState;
+    const { gameState, viewState, time, isTimeTrial, gameMode } = savedState;
     this.ui.difficulty.value = gameState.grid;
-    this.ui.timeTrial.checked = isTimeTrial;
+
+    const mode = gameMode || (isTimeTrial ? "time" : "free");
+    this.ui.gameMode.value = mode;
+
     this.boardSize = this.ui.board.clientWidth;
     this.pieceSize = this.boardSize / gameState.grid;
     this.ui.board.style.setProperty("--grid-size", gameState.grid);
@@ -116,6 +128,7 @@ export default class View {
       gameState.grid,
       gameState.pieces,
       gameState.score,
+      gameState.image,
     );
     this.updateScore(this.game.getScore());
     this.pieceViewData.clear();
@@ -131,7 +144,7 @@ export default class View {
     this.render();
     this.timer.reset();
 
-    if (isTimeTrial) {
+    if (mode === "time") {
       this.timer.start(time);
     } else {
       this.timer.time = time;
@@ -169,6 +182,12 @@ export default class View {
     ) {
       const gridX = Math.round(pieceView.posX / this.pieceSize);
       const gridY = Math.round(pieceView.posY / this.pieceSize);
+
+      if (this.game.isPositionOccupied(gridX, gridY)) {
+        this.saveState();
+        return;
+      }
+
       pieceView.posX = gridX * this.pieceSize;
       pieceView.posY = gridY * this.pieceSize;
       this.updateElementPosition(pieceView);
@@ -364,27 +383,34 @@ export default class View {
 
   showWin() {
     this.audioPlayer.playWin();
-    this.ui.win.style.display = "block";
-    this.ui.win.textContent = "Пазл собран!";
+    this.ui.win.classList.add("show");
+    this.ui.winText.textContent = "Пазл собран!";
   }
 
   hideWin() {
-    this.ui.win.style.display = "none";
+    this.ui.win.classList.remove("show");
   }
 
   showGameOver() {
-    this.ui.win.style.display = "block";
-    this.ui.win.textContent = "Время вышло!";
+    this.ui.win.classList.add("show");
+    this.ui.winText.textContent = "Время вышло!";
   }
 
   showHint() {
     const hintPiece = this.game.getHint();
     if (!hintPiece) return;
-    if (this.ui.timeTrial.checked) {
+    if (this.ui.gameMode.value === "time") {
       this.timer.time -= 5; // Penalty for time trial
     } else {
       this.timer.time += 10; // Penalty for normal mode
     }
+
+    const pieceView = this.pieceViewData.get(hintPiece.id);
+    if (pieceView && pieceView.element) {
+      pieceView.element.classList.add("hint-piece");
+      pieceView.element.style.zIndex = 101;
+    }
+
     const hintEl = document.createElement("div");
     hintEl.className = "piece hint";
     hintEl.style.width = this.pieceSize + "px";
@@ -392,8 +418,13 @@ export default class View {
     hintEl.style.left = hintPiece.position.x * this.pieceSize + "px";
     hintEl.style.top = hintPiece.position.y * this.pieceSize + "px";
     this.ui.board.appendChild(hintEl);
+
     setTimeout(() => {
       hintEl.remove();
+      if (pieceView && pieceView.element) {
+        pieceView.element.classList.remove("hint-piece");
+        pieceView.element.style.zIndex = 10;
+      }
     }, 2000);
   }
 

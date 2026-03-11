@@ -8,7 +8,7 @@ const uiIds = {
   win: "win",
   newGame: "newGame",
   hint: "hint",
-  timeTrial: "timeTrial",
+  gameMode: "gameMode",
   difficulty: "difficulty",
 };
 

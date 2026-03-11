@@ -8,17 +8,19 @@ export default class Game {
     this.image = "https://picsum.photos/800";
   }
 
-  start(grid, savedPieces = null, savedScore = 0) {
+  start(grid, savedPieces = null, savedScore = 0, savedImage = null) {
     this.grid = grid;
     this.score = savedScore;
     if (savedPieces) {
-      this.pieces = savedPieces.map(p => {
+      this.image = savedImage || this.image;
+      this.pieces = savedPieces.map((p) => {
         const piece = new Piece(p.position, p.id);
         piece.correct = p.correct;
         return piece;
       });
     } else {
       this.score = 0; // Reset score only on a new game
+      this.image = "https://picsum.photos/800?" + new Date().getTime();
       this.createPieces();
     }
     return this.pieces;
@@ -51,6 +53,12 @@ export default class Game {
     return piece.position.x === gridX && piece.position.y === gridY;
   }
 
+  isPositionOccupied(gridX, gridY) {
+    return this.pieces.some(
+      (p) => p.correct && p.position.x === gridX && p.position.y === gridY,
+    );
+  }
+
   checkWin() {
     if (this.pieces.length === 0) return false;
     return this.pieces.every((p) => p.correct);
@@ -74,6 +82,7 @@ export default class Game {
       grid: this.grid,
       pieces: this.pieces,
       score: this.score,
-    }
+      image: this.image,
+    };
   }
 }
