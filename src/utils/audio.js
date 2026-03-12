@@ -1,8 +1,10 @@
-export default class AudioPlayer {
-  correctSound = new Audio("/src/assets/correct.mp3");
-  winSound = new Audio("/src/assets/win.mp3");
+import { sounds } from "../config.js";
 
-  constructor() {}
+export default class AudioPlayer {
+  constructor() {
+    this.correctSound = new Audio(sounds.correct);
+    this.winSound = new Audio(sounds.win);
+  }
 
   playCorrect() {
     this.correctSound.volume = 0.2;
