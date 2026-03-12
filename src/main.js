@@ -12,6 +12,7 @@ const uiIds = {
   gameMode: "gameMode",
   difficulty: "difficulty",
   newGameButton: "newGameButton",
+  openMenuButton: "openMenuButton",
 };
 
 const game = new Game(images);

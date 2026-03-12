@@ -107,18 +107,22 @@ export default class Renderer {
   showWin() {
     this.clearHint();
     this.audioPlayer.playWin();
+    this.ui.win.classList.remove("menu-mode");
+    this.ui.winText.style.display = "block";
     this.ui.win.classList.add("show");
     this.ui.winText.textContent = "Пазл собран!";
     this.ui.winText.style.color = "green";
   }
 
   hideWin() {
-    this.ui.win.classList.remove("show");
+    this.ui.win.classList.remove("show", "menu-mode");
     this.ui.winText.style.color = "";
   }
 
   showGameOver() {
     this.clearHint();
+    this.ui.win.classList.remove("menu-mode");
+    this.ui.winText.style.display = "block";
     this.ui.win.classList.add("show");
     this.ui.winText.textContent = "Время вышло!";
     this.ui.winText.style.color = "red";

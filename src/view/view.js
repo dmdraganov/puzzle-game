@@ -39,21 +39,16 @@ export default class View {
       this.start(this.ui.difficulty.value, true),
     );
 
-    const handleSettingsChange = () => {
-      if (!this.ui.win.classList.contains("show")) {
-        this.start(this.ui.difficulty.value, true);
-      }
-    };
-
-    this.ui.difficulty.addEventListener("change", handleSettingsChange);
-    this.ui.gameMode.addEventListener("change", handleSettingsChange);
     this.ui.hint.addEventListener("click", () => this.showHint());
     this.ui.newGameButton.addEventListener("click", () =>
       this.start(this.ui.difficulty.value, true),
     );
+    this.ui.openMenuButton.addEventListener("click", () =>
+      this.pauseGameAndShowMenu(),
+    );
 
     this.dragAndDrop.init();
-    this.loadState().catch(() => this.start(this.ui.difficulty.value, true));
+    this.loadState().catch(() => this.showMenu());
   }
 
   static #getUiElements(uiIds) {
@@ -65,7 +60,22 @@ export default class View {
     return ui;
   }
 
+  pauseGameAndShowMenu() {
+    this.timer.stop();
+    this.showMenu();
+  }
+
+
+  showMenu() {
+    this.renderer.hideWin();
+    this.ui.win.classList.add("menu-mode");
+    this.ui.winText.style.display = "none";
+    this.ui.win.classList.add("show");
+  }
+
   start(gridValue, isNewGame = false) {
+    this.ui.win.classList.remove("show", "menu-mode");
+    this.ui.winText.style.display = "block";
     return this.initGame(gridValue, isNewGame);
   }
 

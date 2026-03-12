@@ -169,6 +169,10 @@ select {
   display: flex;
 }
 
+#win.menu-mode #win-text {
+  display: none;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
