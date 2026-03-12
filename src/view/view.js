@@ -2,20 +2,10 @@ import { clamp } from "../utils/utils.js";
 import Timer from "../utils/timer.js";
 import storage from "../utils/storage.js";
 import AudioPlayer from "../utils/audio.js";
-
-class PieceView {
-  constructor(piece, size, image) {
-    this.piece = piece;
-    this.size = size;
-    this.image = image;
-    this.posX = 0;
-    this.posY = 0;
-    this.element = null;
-  }
-}
+import Renderer, { PieceView } from "./renderer.js";
+import DragAndDrop from "./drag-and-drop.js";
 
 export default class View {
-  dragging = new Map();
   pieceViewData = new Map();
   pieceSize = 0;
   boardSize = 0;
@@ -27,9 +17,20 @@ export default class View {
     this.game = game;
     this.ui = View.#getUiElements(uiIds);
     this.ui.winText = this.ui.win.querySelector("#win-text");
+    this.renderer = new Renderer(this.ui, this.audioPlayer);
     this.timer = new Timer(
-      (time) => this.updateTime(time),
-      () => this.showGameOver(),
+      (time) => this.renderer.updateTime(time),
+      () => this.renderer.showGameOver(),
+    );
+
+    const getPieceSize = () => this.pieceSize;
+    this.dragAndDrop = new DragAndDrop(
+      this.ui.board,
+      this.pieceViewData,
+      this.game,
+      getPieceSize,
+      (pieceId) => this.handleDrop(pieceId),
+      (pieceView) => this.renderer.updateElementPosition(pieceView),
     );
 
     window.addEventListener("resize", () => this.handleRecalculate());
@@ -50,7 +51,7 @@ export default class View {
       this.start(this.ui.difficulty.value, true),
     );
 
-    this.initDragEvents();
+    this.dragAndDrop.init();
     this.loadState().catch(() => this.start(this.ui.difficulty.value, true));
   }
 
@@ -75,7 +76,7 @@ export default class View {
     this.pieceSize = this.boardSize / grid;
     this.ui.board.style.setProperty("--grid-size", grid);
     this.timer.reset();
-    this.hideWin();
+    this.renderer.hideWin();
 
     const pieces = savedData
       ? this.game.start(
@@ -86,8 +87,8 @@ export default class View {
         )
       : this.game.start(grid);
 
-    this.updateScore(this.game.getScore());
-    this.updateHints(this.game.getHintsRemaining());
+    this.renderer.updateScore(this.game.getScore());
+    this.renderer.updateHints(this.game.getHintsRemaining());
 
     const image = new Image();
     image.src = this.game.image;
@@ -119,7 +120,14 @@ export default class View {
       }
       this.pieceViewData.set(piece.id, pieceView);
     }
-    this.render();
+    this.renderer.setPieceViewData(this.pieceViewData);
+    this.renderer.updateDimensions(
+      this.boardSize,
+      this.pieceSize,
+      this.scaledImageWidth,
+      this.scaledImageHeight,
+    );
+    this.renderer.render();
 
     if (this.ui.gameMode.value === "time") {
       const startTime = savedData ? savedData.time : grid * grid * 5;
@@ -197,7 +205,13 @@ export default class View {
         pieceView.posY = pieceView.piece.position.y * this.pieceSize;
       }
     }
-    this.render();
+    this.renderer.updateDimensions(
+      this.boardSize,
+      this.pieceSize,
+      this.scaledImageWidth,
+      this.scaledImageHeight,
+    );
+    this.renderer.render();
   }
 
   handleDrop(pieceId) {
@@ -222,16 +236,16 @@ export default class View {
 
       pieceView.posX = gridX * this.pieceSize;
       pieceView.posY = gridY * this.pieceSize;
-      this.updateElementPosition(pieceView);
+      this.renderer.updateElementPosition(pieceView);
       if (this.game.isCorrectPosition(pieceId, gridX, gridY)) {
         this.game.setPieceCorrect(pieceId, true);
-        this.updateScore(this.game.getScore());
-        this.animateCorrectPlacement(pieceView);
+        this.renderer.updateScore(this.game.getScore());
+        this.renderer.animateCorrectPlacement(pieceView);
         this.audioPlayer.playCorrect();
         if (navigator.vibrate) navigator.vibrate(40);
         if (this.game.checkWin()) {
           this.timer.stop();
-          this.showWin();
+          this.renderer.showWin();
         }
       } else {
         this.game.setPieceCorrect(pieceId, false);
@@ -242,213 +256,11 @@ export default class View {
     }
   }
 
-  initDragEvents() {
-    document.body.addEventListener("mousedown", (e) => {
-      const pieceEl = e.target.closest(".piece");
-      if (!pieceEl) return;
-      const pieceId = parseInt(pieceEl.dataset.id);
-      const pieceView = this.pieceViewData.get(pieceId);
-      if (pieceView && !pieceView.piece.correct) {
-        pieceView.element.style.zIndex = 100;
-        const boardRect = this.ui.board.getBoundingClientRect();
-        const mouseX = e.clientX - boardRect.left;
-        const mouseY = e.clientY - boardRect.top;
-        this.dragging.set("mouse", {
-          pieceView,
-          offsetX: mouseX - pieceView.posX,
-          offsetY: mouseY - pieceView.posY,
-          isSnapped: false,
-        });
-      }
-    });
-
-    document.body.addEventListener(
-      "touchstart",
-      (e) => {
-        const pieceEl = e.target.closest(".piece");
-        if (!pieceEl) return;
-
-        const pieceId = parseInt(pieceEl.dataset.id);
-        const pieceView = this.pieceViewData.get(pieceId);
-
-        if (pieceView && !pieceView.piece.correct) {
-          pieceView.element.style.zIndex = 100;
-          const boardRect = this.ui.board.getBoundingClientRect();
-
-          for (const touch of e.changedTouches) {
-            const mouseX = touch.clientX - boardRect.left;
-            const mouseY = touch.clientY - boardRect.top;
-            this.dragging.set(touch.identifier, {
-              pieceView,
-              offsetX: mouseX - pieceView.posX,
-              offsetY: mouseY - pieceView.posY,
-              isSnapped: false,
-            });
-          }
-        }
-      },
-      { passive: false },
-    );
-
-    window.addEventListener("mousemove", (e) => {
-      if (!this.dragging.has("mouse")) return;
-
-      const boardRect = this.ui.board.getBoundingClientRect();
-      const mouseX = e.clientX - boardRect.left;
-      const mouseY = e.clientY - boardRect.top;
-      const dragState = this.dragging.get("mouse");
-      this.updateDragPosition(dragState, mouseX, mouseY);
-    });
-
-    window.addEventListener(
-      "touchmove",
-      (e) => {
-        e.preventDefault();
-        const boardRect = this.ui.board.getBoundingClientRect();
-        for (const touch of e.changedTouches) {
-          if (!this.dragging.has(touch.identifier)) continue;
-          const mouseX = touch.clientX - boardRect.left;
-          const mouseY = touch.clientY - boardRect.top;
-          const dragState = this.dragging.get(touch.identifier);
-          this.updateDragPosition(dragState, mouseX, mouseY);
-        }
-      },
-      { passive: false },
-    );
-
-    window.addEventListener("mouseup", (e) => {
-      if (!this.dragging.has("mouse")) return;
-      const { pieceView } = this.dragging.get("mouse");
-      pieceView.element.style.zIndex = pieceView.piece.correct ? 1 : 10;
-      this.dragging.delete("mouse");
-      this.handleDrop(pieceView.piece.id);
-    });
-
-    window.addEventListener("touchend", (e) => {
-      for (const touch of e.changedTouches) {
-        if (!this.dragging.has(touch.identifier)) continue;
-        const { pieceView } = this.dragging.get(touch.identifier);
-        pieceView.element.style.zIndex = pieceView.piece.correct ? 1 : 10;
-        this.dragging.delete(touch.identifier);
-        this.handleDrop(pieceView.piece.id);
-      }
-    });
-  }
-
-  updateDragPosition(dragState, mouseX, mouseY) {
-    const { pieceView, offsetX, offsetY } = dragState;
-    const freeX = mouseX - offsetX;
-    const freeY = mouseY - offsetY;
-    const gridX = clamp(
-      Math.round(freeX / this.pieceSize),
-      0,
-      this.game.grid - 1,
-    );
-    const gridY = clamp(
-      Math.round(freeY / this.pieceSize),
-      0,
-      this.game.grid - 1,
-    );
-    const snapX = gridX * this.pieceSize;
-    const snapY = gridY * this.pieceSize;
-    const dist = Math.hypot(freeX - snapX, freeY - snapY);
-    if (dragState.isSnapped) {
-      const exitSnapZone = this.pieceSize * 0.4;
-      if (dist > exitSnapZone) {
-        dragState.isSnapped = false;
-        pieceView.posX = freeX;
-        pieceView.posY = freeY;
-      } else {
-        pieceView.posX = snapX;
-        pieceView.posY = snapY;
-      }
-    } else {
-      const enterSnapZone = this.pieceSize * 0.2;
-      if (dist < enterSnapZone) {
-        dragState.isSnapped = true;
-        pieceView.posX = snapX;
-        pieceView.posY = snapY;
-      } else {
-        pieceView.posX = freeX;
-        pieceView.posY = freeY;
-      }
-    }
-    this.updateElementPosition(pieceView);
-  }
-
-  render() {
-    this.ui.board.innerHTML = "";
-    for (const pieceView of this.pieceViewData.values()) {
-      const el = this.createPieceElement(pieceView);
-      pieceView.element = el;
-      this.ui.board.appendChild(el);
-      this.updateElementPosition(pieceView);
-    }
-  }
-
-  createPieceElement(pieceView) {
-    const el = document.createElement("div");
-    const { piece, size, image } = pieceView;
-    el.dataset.id = piece.id;
-    el.className = "piece";
-    el.style.width = size + "px";
-    el.style.height = size + "px";
-    el.style.backgroundImage = `url(${image})`;
-    
-    el.style.backgroundSize = `${this.scaledImageWidth}px ${this.scaledImageHeight}px`;
-
-    const offsetX = (this.scaledImageWidth - this.boardSize) / 2;
-    const offsetY = (this.scaledImageHeight - this.boardSize) / 2;
-
-    const bgX = piece.position.x * this.pieceSize + offsetX;
-    const bgY = piece.position.y * this.pieceSize + offsetY;
-
-    el.style.backgroundPosition = `-${bgX}px -${bgY}px`;
-    el.classList.toggle("correct", piece.correct);
-    return el;
-  }
-
-  updateElementPosition(pieceView) {
-    if (!pieceView.element) return;
-    pieceView.element.style.left = pieceView.posX + "px";
-    pieceView.element.style.top = pieceView.posY + "px";
-  }
-
-  updateTime(time) {
-    this.ui.timer.textContent = time;
-  }
-  updateScore(score) {
-    this.ui.score.textContent = score;
-  }
-
-  updateHints(count) {
-    this.ui.hintsRemaining.textContent = count;
-    this.ui.hint.disabled = count <= 0;
-  }
-
-  showWin() {
-    this.audioPlayer.playWin();
-    this.ui.win.classList.add("show");
-    this.ui.winText.textContent = "Пазл собран!";
-    this.ui.winText.style.color = "green";
-  }
-
-  hideWin() {
-    this.ui.win.classList.remove("show");
-    this.ui.winText.style.color = "";
-  }
-
-  showGameOver() {
-    this.ui.win.classList.add("show");
-    this.ui.winText.textContent = "Время вышло!";
-    this.ui.winText.style.color = "red";
-  }
-
   showHint() {
     const hintPiece = this.game.getHint();
     if (!hintPiece) return;
 
-    this.updateHints(this.game.getHintsRemaining());
+    this.renderer.updateHints(this.game.getHintsRemaining());
 
     if (this.ui.gameMode.value === "time") {
       this.timer.time -= 5; // Penalty for time trial
@@ -457,38 +269,6 @@ export default class View {
     }
 
     const pieceView = this.pieceViewData.get(hintPiece.id);
-    if (pieceView && pieceView.element) {
-      pieceView.element.classList.add("hint-piece");
-      pieceView.element.style.zIndex = 101;
-    }
-
-    const hintEl = document.createElement("div");
-    hintEl.className = "piece hint";
-    hintEl.style.width = this.pieceSize + "px";
-    hintEl.style.height = this.pieceSize + "px";
-    hintEl.style.left = hintPiece.position.x * this.pieceSize + "px";
-    hintEl.style.top = hintPiece.position.y * this.pieceSize + "px";
-    this.ui.board.appendChild(hintEl);
-
-    setTimeout(() => {
-      hintEl.remove();
-      if (pieceView && pieceView.element) {
-        pieceView.element.classList.remove("hint-piece");
-        pieceView.element.style.zIndex = 10;
-      }
-    }, 2000);
-  }
-
-  animateCorrectPlacement(pieceView) {
-    if (!pieceView.element) return;
-    const el = pieceView.element;
-    el.style.left = pieceView.posX + "px";
-    el.style.top = pieceView.posY + "px";
-    el.style.zIndex = 1;
-    el.classList.add("correct");
-    el.classList.add("snapped");
-    el.addEventListener("animationend", () => el.classList.remove("snapped"), {
-      once: true,
-    });
+    this.renderer.showHint(hintPiece, pieceView);
   }
 }
