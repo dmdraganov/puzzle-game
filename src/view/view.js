@@ -257,16 +257,11 @@ export default class View {
   }
 
   showHint() {
-    const hintPiece = this.game.getHint();
+    const hintPiece = this.game.useHint();
     if (!hintPiece) return;
 
     this.renderer.updateHints(this.game.getHintsRemaining());
-
-    if (this.ui.gameMode.value === "time") {
-      this.timer.time -= 5; // Penalty for time trial
-    } else {
-      this.timer.time += 10; // Penalty for normal mode
-    }
+    this.renderer.updateScore(this.game.getScore());
 
     const pieceView = this.pieceViewData.get(hintPiece.id);
     this.renderer.showHint(hintPiece, pieceView);

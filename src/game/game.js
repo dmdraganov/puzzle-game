@@ -84,13 +84,14 @@ export default class Game {
     return this.pieces.every((p) => p.correct);
   }
 
-  getHint() {
+  useHint() {
     if (this.hintsUsed >= this.maxHints) {
       return null;
     }
     const incorrectPiece = this.pieces.find((p) => !p.correct);
     if (incorrectPiece) {
       this.hintsUsed++;
+      this.score -= 10;
     }
     return incorrectPiece;
   }
