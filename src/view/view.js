@@ -9,6 +9,7 @@ export default class View {
   pieceViewData = new Map();
   pieceSize = 0;
   boardSize = 0;
+  previousBoardSize = 0;
   audioPlayer = new AudioPlayer();
   scaledImageWidth = 0;
   scaledImageHeight = 0;
@@ -73,6 +74,7 @@ export default class View {
 
     const grid = parseInt(gridValue);
     this.boardSize = this.ui.board.clientWidth;
+    this.previousBoardSize = this.boardSize;
     this.pieceSize = this.boardSize / grid;
     this.ui.board.style.setProperty("--grid-size", grid);
     this.timer.reset();
@@ -178,7 +180,10 @@ export default class View {
 
   handleRecalculate() {
     const grid = this.game.grid;
+    const oldBoardSize = this.previousBoardSize;
     this.boardSize = this.ui.board.clientWidth;
+    this.previousBoardSize = this.boardSize;
+    const scaleFactor = this.boardSize / oldBoardSize;
     this.pieceSize = this.boardSize / grid;
     this.ui.board.style.setProperty("--grid-size", grid);
 
@@ -198,6 +203,9 @@ export default class View {
       if (pieceView.piece.correct) {
         pieceView.posX = pieceView.piece.position.x * this.pieceSize;
         pieceView.posY = pieceView.piece.position.y * this.pieceSize;
+      } else {
+        pieceView.posX *= scaleFactor;
+        pieceView.posY *= scaleFactor;
       }
     }
     this.renderer.updateDimensions(

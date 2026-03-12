@@ -82,7 +82,7 @@ export default class Renderer {
   }
 
   updateHints(count) {
-    this.ui.hintsRemaining.textContent = count;
+    this.ui.hint.textContent = `Подсказка (${count})`;
     this.ui.hint.disabled = count <= 0;
   }
 
