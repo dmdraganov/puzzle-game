@@ -114,9 +114,22 @@ export default class DragAndDrop {
 
   updateDragPosition(dragState, mouseX, mouseY) {
     const { pieceView, offsetX, offsetY } = dragState;
-    const pieceSize = this.getPieceSize();
-    const freeX = mouseX - offsetX;
-    const freeY = mouseY - offsetY;
+    const pieceSize = pieceView.size; // Use pieceView.size
+    let freeX = mouseX - offsetX;
+    let freeY = mouseY - offsetY;
+
+    const boardRect = this.board.getBoundingClientRect();
+
+    // Clamp to viewport
+    const minX = -boardRect.left;
+    const maxX = window.innerWidth - boardRect.left - pieceSize;
+    const minY = -boardRect.top;
+    const maxY = window.innerHeight - boardRect.top - pieceSize;
+
+    freeX = clamp(freeX, minX, maxX);
+    freeY = clamp(freeY, minY, maxY);
+
+    // The rest of the logic
     const gridX = clamp(Math.round(freeX / pieceSize), 0, this.game.grid - 1);
     const gridY = clamp(Math.round(freeY / pieceSize), 0, this.game.grid - 1);
     const snapX = gridX * pieceSize;
