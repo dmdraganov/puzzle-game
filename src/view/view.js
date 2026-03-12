@@ -70,6 +70,7 @@ export default class View {
   }
 
   async initGame(gridValue, isNewGame, savedData = null) {
+    this.renderer.clearHint();
     if (isNewGame) storage.save(null);
 
     const grid = parseInt(gridValue);

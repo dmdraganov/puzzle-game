@@ -94,7 +94,6 @@ select {
   background: rgba(41, 121, 255, 0.5);
   border: 2px solid #2979ff;
   box-sizing: border-box;
-  animation: fadeOut 2s forwards;
   pointer-events: none;
   z-index: 1000;
   border-radius: 6px;
@@ -110,7 +109,7 @@ select {
 
 .correct {
   z-index: 1; /* Keep correct pieces on top */
-  box-shadow: none;
+  cursor: default;
 }
 
 .snapped {
@@ -123,18 +122,6 @@ select {
   }
   100% {
     transform: scale(1);
-  }
-}
-
-@keyframes fadeOut {
-  0% {
-    opacity: 1;
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
   }
 }
 

@@ -18,6 +18,7 @@ export default class Renderer {
     this.scaledImageWidth = 0;
     this.scaledImageHeight = 0;
     this.pieceViewData = new Map();
+    this.hintedPieceInfo = null;
   }
 
   updateDimensions(
@@ -44,6 +45,17 @@ export default class Renderer {
       this.ui.board.appendChild(el);
       this.updateElementPosition(pieceView);
     }
+    if (this.hintedPieceInfo) {
+      const hintPiece = this.hintedPieceInfo.pieceView.piece;
+      const hintEl = document.createElement("div");
+      hintEl.className = "piece hint";
+      hintEl.style.width = this.pieceSize + "px";
+      hintEl.style.height = this.pieceSize + "px";
+      hintEl.style.left = hintPiece.position.x * this.pieceSize + "px";
+      hintEl.style.top = hintPiece.position.y * this.pieceSize + "px";
+      this.ui.board.appendChild(hintEl);
+      this.hintedPieceInfo.hintElement = hintEl;
+    }
   }
 
   createPieceElement(pieceView) {
@@ -65,6 +77,12 @@ export default class Renderer {
 
     el.style.backgroundPosition = `-${bgX}px -${bgY}px`;
     el.classList.toggle("correct", piece.correct);
+
+    if (this.hintedPieceInfo && this.hintedPieceInfo.pieceView === pieceView) {
+      el.classList.add("hint-piece");
+      el.style.zIndex = 101;
+    }
+
     return el;
   }
 
@@ -87,6 +105,7 @@ export default class Renderer {
   }
 
   showWin() {
+    this.clearHint();
     this.audioPlayer.playWin();
     this.ui.win.classList.add("show");
     this.ui.winText.textContent = "Пазл собран!";
@@ -99,12 +118,16 @@ export default class Renderer {
   }
 
   showGameOver() {
+    this.clearHint();
     this.ui.win.classList.add("show");
     this.ui.winText.textContent = "Время вышло!";
     this.ui.winText.style.color = "red";
   }
 
   showHint(hintPiece, pieceView) {
+    if (this.hintedPieceInfo) {
+      this.clearHint();
+    }
     if (pieceView && pieceView.element) {
       pieceView.element.classList.add("hint-piece");
       pieceView.element.style.zIndex = 101;
@@ -117,14 +140,25 @@ export default class Renderer {
     hintEl.style.left = hintPiece.position.x * this.pieceSize + "px";
     hintEl.style.top = hintPiece.position.y * this.pieceSize + "px";
     this.ui.board.appendChild(hintEl);
+    this.hintedPieceInfo = {
+      pieceView,
+      hintElement: hintEl,
+    };
+  }
 
-    setTimeout(() => {
-      hintEl.remove();
-      if (pieceView && pieceView.element) {
-        pieceView.element.classList.remove("hint-piece");
-        pieceView.element.style.zIndex = 10;
-      }
-    }, 2000);
+  clearHint() {
+    if (!this.hintedPieceInfo) return;
+    if (this.hintedPieceInfo.hintElement) {
+      this.hintedPieceInfo.hintElement.remove();
+    }
+    if (
+      this.hintedPieceInfo.pieceView &&
+      this.hintedPieceInfo.pieceView.element
+    ) {
+      this.hintedPieceInfo.pieceView.element.classList.remove("hint-piece");
+      this.hintedPieceInfo.pieceView.element.style.zIndex = 10;
+    }
+    this.hintedPieceInfo = null;
   }
 
   animateCorrectPlacement(pieceView) {
@@ -138,5 +172,11 @@ export default class Renderer {
     el.addEventListener("animationend", () => el.classList.remove("snapped"), {
       once: true,
     });
+    if (
+      this.hintedPieceInfo &&
+      this.hintedPieceInfo.pieceView.piece.id === pieceView.piece.id
+    ) {
+      this.clearHint();
+    }
   }
 }
