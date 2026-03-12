@@ -1,48 +1,35 @@
 import Piece from "./piece.js";
 
 export default class Game {
-  constructor() {
+  constructor(images) {
     this.pieces = [];
     this.grid = 3;
     this.score = 0;
     this.image = null;
     this.hintsUsed = 0;
     this.maxHints = 3;
-    this.images = [
-      "src/assets/images/autumn.jpg",
-      "src/assets/images/beach.jpg",
-      "src/assets/images/desert.jpg",
-      "src/assets/images/desktop.jpg",
-      "src/assets/images/forest.jpg",
-      "src/assets/images/kozel.jpg",
-      "src/assets/images/street.jpg",
-      "src/assets/images/files.jpg",
-    ];
+    this.images = images;
   }
 
-  start(
-    grid,
-    savedPieces = null,
-    savedState = { score: 0, hintsUsed: 0 },
-    savedImage = null,
-  ) {
+  startNewGame(grid) {
     this.grid = grid;
-    this.score = savedState.score;
-    this.hintsUsed = savedState.hintsUsed;
+    this.score = 0;
+    this.hintsUsed = 0;
+    this.image = this.images[Math.floor(Math.random() * this.images.length)];
+    this.createPieces();
+    return this.pieces;
+  }
 
-    if (savedPieces) {
-      this.image = savedImage || this.images[0];
-      this.pieces = savedPieces.map((p) => {
-        const piece = new Piece(p.position, p.id);
-        piece.correct = p.correct;
-        return piece;
-      });
-    } else {
-      this.score = 0; // Reset score only on a new game
-      this.hintsUsed = 0;
-      this.image = this.images[Math.floor(Math.random() * this.images.length)];
-      this.createPieces();
-    }
+  loadGame(gameState) {
+    this.grid = gameState.grid;
+    this.score = gameState.score;
+    this.hintsUsed = gameState.hintsUsed;
+    this.image = gameState.image || this.images[0];
+    this.pieces = gameState.pieces.map((p) => {
+      const piece = new Piece(p.position, p.id);
+      piece.correct = p.correct;
+      return piece;
+    });
     return this.pieces;
   }
 

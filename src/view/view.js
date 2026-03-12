@@ -79,13 +79,8 @@ export default class View {
     this.renderer.hideWin();
 
     const pieces = savedData
-      ? this.game.start(
-          grid,
-          savedData.gameState.pieces,
-          savedData.gameState,
-          savedData.gameState.image,
-        )
-      : this.game.start(grid);
+      ? this.game.loadGame(savedData.gameState)
+      : this.game.startNewGame(grid);
 
     this.renderer.updateScore(this.game.getScore());
     this.renderer.updateHints(this.game.getHintsRemaining());
