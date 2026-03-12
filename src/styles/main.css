@@ -136,14 +136,6 @@ select {
 #win-text {
   font-size: 3em;
   color: #fff;
-  text-shadow:
-    0 0 10px #fff,
-    0 0 20px #fff,
-    0 0 30px #ff0051,
-    0 0 40px #ff0051,
-    0 0 50px #ff0051,
-    0 0 60px #ff0051,
-    0 0 70px #ff0051;
   animation: fadeIn 0.5s ease-out;
 }
 

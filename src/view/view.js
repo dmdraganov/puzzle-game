@@ -20,6 +20,8 @@ export default class View {
   pieceSize = 0;
   boardSize = 0;
   audioPlayer = new AudioPlayer();
+  scaledImageWidth = 0;
+  scaledImageHeight = 0;
 
   constructor(game, uiIds) {
     this.game = game;
@@ -49,7 +51,7 @@ export default class View {
     );
 
     this.initDragEvents();
-    this.loadState() || this.start(this.ui.difficulty.value, true);
+    this.loadState().catch(() => this.start(this.ui.difficulty.value, true));
   }
 
   static #getUiElements(uiIds) {
@@ -62,29 +64,68 @@ export default class View {
   }
 
   start(gridValue, isNewGame = false) {
+    return this.initGame(gridValue, isNewGame);
+  }
+
+  async initGame(gridValue, isNewGame, savedData = null) {
     if (isNewGame) storage.save(null);
+
     const grid = parseInt(gridValue);
     this.boardSize = this.ui.board.clientWidth;
     this.pieceSize = this.boardSize / grid;
     this.ui.board.style.setProperty("--grid-size", grid);
     this.timer.reset();
     this.hideWin();
-    const pieces = this.game.start(grid);
+
+    const pieces = savedData
+      ? this.game.start(
+          grid,
+          savedData.gameState.pieces,
+          savedData.gameState,
+          savedData.gameState.image,
+        )
+      : this.game.start(grid);
+
     this.updateScore(this.game.getScore());
     this.updateHints(this.game.getHintsRemaining());
+
+    const image = new Image();
+    image.src = this.game.image;
+    await new Promise((resolve) => (image.onload = resolve));
+
+    const imgAR = image.naturalWidth / image.naturalHeight;
+    const boardAR = 1;
+
+    if (imgAR > boardAR) {
+      this.scaledImageHeight = this.boardSize;
+      this.scaledImageWidth = this.scaledImageHeight * imgAR;
+    } else {
+      this.scaledImageWidth = this.boardSize;
+      this.scaledImageHeight = this.scaledImageWidth / imgAR;
+    }
+
     this.pieceViewData.clear();
     for (const piece of pieces) {
       const pieceView = new PieceView(piece, this.pieceSize, this.game.image);
+      if (savedData) {
+        const savedView = savedData.viewState.find((v) => v.id === piece.id);
+        if (savedView) {
+          pieceView.posX = savedView.posX;
+          pieceView.posY = savedView.posY;
+        }
+      } else {
+        pieceView.posY = this.boardSize + 50 + Math.random() * 100;
+        pieceView.posX = Math.random() * (this.boardSize - pieceView.size);
+      }
       this.pieceViewData.set(piece.id, pieceView);
-      pieceView.posY = this.boardSize + 50 + Math.random() * 100;
-      pieceView.posX = Math.random() * (this.boardSize - pieceView.size);
     }
     this.render();
 
     if (this.ui.gameMode.value === "time") {
-      const startTime = grid * grid * 5;
+      const startTime = savedData ? savedData.time : grid * grid * 5;
       this.timer.start(startTime);
     } else {
+      this.timer.time = savedData ? savedData.time : 0;
       this.timer.start();
     }
   }
@@ -107,7 +148,7 @@ export default class View {
     });
   }
 
-  loadState() {
+  async loadState() {
     const savedState = storage.load();
     if (
       !savedState ||
@@ -116,7 +157,7 @@ export default class View {
       Array.isArray(savedState)
     ) {
       storage.save(null);
-      return false;
+      throw new Error("No saved state");
     }
     const { gameState, viewState, time, isTimeTrial, gameMode } = savedState;
     this.ui.difficulty.value = gameState.grid;
@@ -124,37 +165,11 @@ export default class View {
     const mode = gameMode || (isTimeTrial ? "time" : "free");
     this.ui.gameMode.value = mode;
 
-    this.boardSize = this.ui.board.clientWidth;
-    this.pieceSize = this.boardSize / gameState.grid;
-    this.ui.board.style.setProperty("--grid-size", gameState.grid);
-    this.hideWin();
-    const pieces = this.game.start(
-      gameState.grid,
-      gameState.pieces,
+    await this.initGame(gameState.grid, false, {
       gameState,
-      gameState.image,
-    );
-    this.updateScore(this.game.getScore());
-    this.updateHints(this.game.getHintsRemaining());
-    this.pieceViewData.clear();
-    for (const piece of pieces) {
-      const pieceView = new PieceView(piece, this.pieceSize, this.game.image);
-      const savedView = viewState.find((v) => v.id === piece.id);
-      if (savedView) {
-        pieceView.posX = savedView.posX;
-        pieceView.posY = savedView.posY;
-      }
-      this.pieceViewData.set(piece.id, pieceView);
-    }
-    this.render();
-    this.timer.reset();
-
-    if (mode === "time") {
-      this.timer.start(time);
-    } else {
-      this.timer.time = time;
-      this.timer.start();
-    }
+      viewState,
+      time,
+    });
     return true;
   }
 
@@ -163,6 +178,18 @@ export default class View {
     this.boardSize = this.ui.board.clientWidth;
     this.pieceSize = this.boardSize / grid;
     this.ui.board.style.setProperty("--grid-size", grid);
+
+    const imgAR = this.scaledImageWidth / this.scaledImageHeight;
+    const boardAR = 1;
+
+    if (imgAR > boardAR) {
+      this.scaledImageHeight = this.boardSize;
+      this.scaledImageWidth = this.scaledImageHeight * imgAR;
+    } else {
+      this.scaledImageWidth = this.boardSize;
+      this.scaledImageHeight = this.scaledImageWidth / imgAR;
+    }
+
     for (const pieceView of this.pieceViewData.values()) {
       pieceView.size = this.pieceSize;
       if (pieceView.piece.correct) {
@@ -367,8 +394,16 @@ export default class View {
     el.style.width = size + "px";
     el.style.height = size + "px";
     el.style.backgroundImage = `url(${image})`;
-    el.style.backgroundSize = `${this.boardSize}px ${this.boardSize}px`;
-    el.style.backgroundPosition = `-${piece.position.x * size}px -${piece.position.y * size}px`;
+    
+    el.style.backgroundSize = `${this.scaledImageWidth}px ${this.scaledImageHeight}px`;
+
+    const offsetX = (this.scaledImageWidth - this.boardSize) / 2;
+    const offsetY = (this.scaledImageHeight - this.boardSize) / 2;
+
+    const bgX = piece.position.x * this.pieceSize + offsetX;
+    const bgY = piece.position.y * this.pieceSize + offsetY;
+
+    el.style.backgroundPosition = `-${bgX}px -${bgY}px`;
     el.classList.toggle("correct", piece.correct);
     return el;
   }
@@ -395,15 +430,18 @@ export default class View {
     this.audioPlayer.playWin();
     this.ui.win.classList.add("show");
     this.ui.winText.textContent = "Пазл собран!";
+    this.ui.winText.style.color = "green";
   }
 
   hideWin() {
     this.ui.win.classList.remove("show");
+    this.ui.winText.style.color = "";
   }
 
   showGameOver() {
     this.ui.win.classList.add("show");
     this.ui.winText.textContent = "Время вышло!";
+    this.ui.winText.style.color = "red";
   }
 
   showHint() {
