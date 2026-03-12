@@ -46,6 +46,7 @@ export default class View {
     this.ui.openMenuButton.addEventListener("click", () =>
       this.pauseGameAndShowMenu(),
     );
+    this.ui.resumeGame.addEventListener("click", () => this.resumeGame());
 
     this.dragAndDrop.init();
     this.loadState().catch(() => this.showMenu());
@@ -65,16 +66,26 @@ export default class View {
     this.showMenu();
   }
 
+  resumeGame() {
+    this.hideMenu();
+    this.timer.start();
+  }
+
+  hideMenu() {
+    this.ui.win.classList.remove("show", "menu-mode");
+    document.body.style.overflow = "auto";
+  }
 
   showMenu() {
     this.renderer.hideWin();
     this.ui.win.classList.add("menu-mode");
     this.ui.winText.style.display = "none";
     this.ui.win.classList.add("show");
+    document.body.style.overflow = "hidden";
   }
 
   start(gridValue, isNewGame = false) {
-    this.ui.win.classList.remove("show", "menu-mode");
+    this.hideMenu();
     this.ui.winText.style.display = "block";
     return this.initGame(gridValue, isNewGame);
   }
