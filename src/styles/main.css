@@ -11,20 +11,24 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start; /* Align content to the top */
-  min-height: 100vh; /* Ensure body takes full height */
-  padding: 1rem; /* Add some padding */
+  justify-content: flex-start;
+  min-height: 100svh; /* Ensure body takes full viewport height */
+  padding: 1rem;
   box-sizing: border-box;
+}
+
+#top-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  width: 100%;
 }
 
 #stats {
   display: flex;
-  flex-wrap: wrap; /* Allow wrapping on small screens */
-  gap: 10px;
-  padding: 10px 0;
-  align-items: center;
-  justify-content: center; /* Center stats */
-  margin-bottom: 1rem; /* Space between stats and board */
+  gap: 20px; /* Increased gap */
+  justify-content: center;
+  width: 100%;
 }
 
 button,
@@ -58,6 +62,8 @@ select {
 }
 
 #board {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
   width: var(--boardSize);
   height: var(--boardSize);
   max-width: var(--max-board-size); /* Apply max size */
@@ -186,10 +192,6 @@ select {
 
 /* Media Queries for Responsiveness */
 @media (min-width: 768px) {
-  #stats {
-    margin-bottom: 2rem; /* More space on larger screens */
-  }
-
   button,
   select {
     padding: 12px 16px; /* Larger buttons on desktop */
