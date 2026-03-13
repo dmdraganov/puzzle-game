@@ -73,6 +73,7 @@ export default class View {
 
   hideMenu() {
     this.ui.win.classList.remove("show", "menu-mode");
+    this.ui.resumeGame.style.display = "none";
     document.body.style.overflow = "auto";
   }
 
