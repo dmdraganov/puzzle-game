@@ -7,19 +7,8 @@ export default class Timer {
     this.isCountdown = false;
   }
 
-  start(startTime = null) {
-    this.stop();
-
-    if (startTime) {
-      this.time = startTime;
-      this.isCountdown = true;
-    } else {
-      this.time = 0;
-      this.isCountdown = false;
-    }
-
-    if (this.onTick) this.onTick(this.#format(this.time));
-
+  #run() {
+    if (this.interval) return;
     this.interval = setInterval(() => {
       if (this.isCountdown) {
         this.time--;
@@ -31,20 +20,38 @@ export default class Timer {
       } else {
         this.time++;
       }
-
-      if (this.onTick) {
-        this.onTick(this.#format(this.time));
-      }
+      if (this.onTick) this.onTick(this.#format(this.time));
     }, 1000);
+  }
+
+  startCountdown(startTime) {
+    this.stop();
+    this.time = startTime;
+    this.isCountdown = true;
+    if (this.onTick) this.onTick(this.#format(this.time));
+    this.#run();
+  }
+
+  startStopwatch(startTime = 0) {
+    this.stop();
+    this.time = startTime;
+    this.isCountdown = false;
+    if (this.onTick) this.onTick(this.#format(this.time));
+    this.#run();
   }
 
   stop() {
     clearInterval(this.interval);
+    this.interval = null;
+  }
+
+  resume() {
+    this.#run();
   }
 
   reset() {
-    this.time = 0;
     this.stop();
+    this.time = 0;
   }
 
   #format(seconds) {

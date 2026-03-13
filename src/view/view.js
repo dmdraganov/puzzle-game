@@ -68,7 +68,7 @@ export default class View {
 
   resumeGame() {
     this.hideMenu();
-    this.timer.start();
+    this.timer.resume();
   }
 
   hideMenu() {
@@ -208,10 +208,10 @@ export default class View {
 
     if (this.ui.gameMode.value === "time") {
       const startTime = savedData ? savedData.time : grid * grid * 5;
-      this.timer.start(startTime);
+      this.timer.startCountdown(startTime);
     } else {
-      this.timer.time = savedData ? savedData.time : 0;
-      this.timer.start();
+      const startTime = savedData ? savedData.time : 0;
+      this.timer.startStopwatch(startTime);
     }
   }
 
