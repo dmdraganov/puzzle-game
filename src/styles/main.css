@@ -1,20 +1,23 @@
 :root {
   --boardSize: 90vmin;
-  --max-board-size: 700px; /* Added max-width */
+  --max-board-size: 700px;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: sans-serif;
+  overflow: hidden; /* Prevent body from scrolling */
 }
 
 body {
-  margin: 0;
-  font-family: sans-serif;
   background: #111;
   color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 100svh; /* Ensure body takes full viewport height */
+  display: grid;
+  grid-template-rows: auto 1fr auto; /* Header, Main Content, Footer */
   padding: 1rem;
   box-sizing: border-box;
+  gap: 1rem;
 }
 
 #top-controls {
@@ -26,10 +29,43 @@ body {
 
 #stats {
   display: flex;
-  gap: 20px; /* Increased gap */
+  gap: 20px;
   justify-content: center;
   width: 100%;
 }
+
+#game-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: auto; /* Allow scrolling if content overflows */
+  min-height: 0; /*  */
+}
+
+#board {
+  width: var(--boardSize);
+  height: var(--boardSize);
+  max-width: var(--max-board-size);
+  max-height: var(--max-board-size);
+  background-color: #222;
+  position: relative;
+  border-radius: 12px;
+  background-image:
+    repeating-linear-gradient(
+      rgba(255, 255, 255, 0.1) 0 1px,
+      transparent 1px 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.1) 0 1px,
+      transparent 1px 100%
+    );
+  background-size: calc(100% / var(--grid-size)) calc(100% / var(--grid-size));
+  flex-shrink: 0;
+}
+
+
 
 button,
 select {
@@ -39,7 +75,7 @@ select {
   background: #2979ff;
   color: white;
   cursor: pointer;
-  font-size: 1rem; /* Responsive font size */
+  font-size: 1rem;
 }
 
 #newGameButton {
@@ -61,29 +97,6 @@ select {
   cursor: pointer;
 }
 
-#board {
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  width: var(--boardSize);
-  height: var(--boardSize);
-  max-width: var(--max-board-size); /* Apply max size */
-  max-height: var(--max-board-size); /* Apply max size */
-  background-color: #222;
-  position: relative;
-  border-radius: 12px;
-  background-image:
-    repeating-linear-gradient(
-      rgba(255, 255, 255, 0.1) 0 1px,
-      transparent 1px 100%
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.1) 0 1px,
-      transparent 1px 100%
-    );
-  background-size: calc(100% / var(--grid-size)) calc(100% / var(--grid-size));
-}
-
 .piece {
   position: absolute;
   background-size: var(--boardSize);
@@ -94,6 +107,7 @@ select {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
   cursor: grab;
   transition: box-shadow 0.2s;
+  pointer-events: all; /* Re-enable pointer events for pieces */
 }
 
 .hint {
@@ -152,13 +166,13 @@ select {
   font-size: 3em;
   color: #fff;
   animation: fadeIn 0.5s ease-out;
-  text-align: center; /* Center text */
+  text-align: center;
 }
 
 #win-controls {
   display: flex;
   flex-direction: column;
-  flex-wrap: wrap; /* Allow wrapping */
+  flex-wrap: wrap;
   gap: 20px;
   align-items: center;
   justify-content: center;
@@ -167,7 +181,7 @@ select {
 .win-controls-group {
   display: flex;
   gap: 10px;
-  flex-wrap: wrap; /* Allow wrapping */
+  flex-wrap: wrap;
   justify-content: center;
 }
 
@@ -194,7 +208,7 @@ select {
 @media (min-width: 768px) {
   button,
   select {
-    padding: 12px 16px; /* Larger buttons on desktop */
+    padding: 12px 16px;
     font-size: 1.1rem;
   }
 
@@ -203,7 +217,7 @@ select {
   }
 
   .win-controls-group {
-    flex-wrap: nowrap; /* No wrap on desktop */
+    flex-wrap: nowrap;
   }
 
   .piece {
