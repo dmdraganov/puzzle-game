@@ -80,6 +80,16 @@ export default class View {
     this.renderer.hideWin();
     this.ui.win.classList.add("menu-mode");
     this.ui.winText.style.display = "none";
+
+    const isGameActive = this.game.getPieces().length > 0;
+
+    if (isGameActive) {
+      this.ui.resumeGame.style.display = "block";
+      this.ui.resumeGame.style.background = "#00c853";
+    } else {
+      this.ui.resumeGame.style.display = "none";
+    }
+
     this.ui.win.classList.add("show");
     document.body.style.overflow = "hidden";
   }

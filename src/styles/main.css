@@ -230,7 +230,4 @@ select {
   display: none;
 }
 
-#win.menu-mode #resumeGame {
-  display: block;
-  background: #00c853;
-}
+
