@@ -130,6 +130,7 @@ select {
 .correct {
   z-index: 1; /* Keep correct pieces on top */
   cursor: default;
+  box-shadow: none;
 }
 
 .snapped {
