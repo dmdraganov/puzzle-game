@@ -95,8 +95,32 @@ export default class View {
     if (isNewGame) storage.save(null);
 
     const grid = parseInt(gridValue);
-    this.boardSize = this.ui.board.clientWidth;
-    this.previousBoardSize = this.boardSize;
+    const gameWrapper = document.getElementById("game-wrapper");
+    const wrapperRect = gameWrapper.getBoundingClientRect();
+
+    const prefersSides = wrapperRect.width > wrapperRect.height && wrapperRect.width > 700;
+
+    if (prefersSides) {
+      gameWrapper.style.alignItems = "center";
+      const pieceAreaWidth = Math.min(wrapperRect.width * 0.4, 300);
+      const maxBoardSizeFromHeight = wrapperRect.height - 20;
+      const maxBoardSizeFromWidth = wrapperRect.width - pieceAreaWidth - 20;
+      this.boardSize = Math.floor(
+        Math.min(maxBoardSizeFromHeight, maxBoardSizeFromWidth),
+      );
+    } else {
+      gameWrapper.style.alignItems = "flex-start";
+      const pieceAreaHeight = Math.min(wrapperRect.height * 0.3, 150);
+      const maxBoardSizeFromWidth = wrapperRect.width - 20;
+      const maxBoardSizeFromHeight =
+        wrapperRect.height - pieceAreaHeight - 20;
+      this.boardSize = Math.floor(
+        Math.min(maxBoardSizeFromWidth, maxBoardSizeFromHeight),
+      );
+    }
+
+    this.ui.board.style.width = this.boardSize + "px";
+    this.ui.board.style.height = this.boardSize + "px";
     this.pieceSize = this.boardSize / grid;
     this.ui.board.style.setProperty("--grid-size", grid);
     this.timer.reset();
@@ -114,9 +138,8 @@ export default class View {
     await new Promise((resolve) => (image.onload = resolve));
 
     const imgAR = image.naturalWidth / image.naturalHeight;
-    const boardAR = 1;
 
-    if (imgAR > boardAR) {
+    if (imgAR > 1) {
       this.scaledImageHeight = this.boardSize;
       this.scaledImageWidth = this.scaledImageHeight * imgAR;
     } else {
@@ -125,11 +148,7 @@ export default class View {
     }
 
     this.pieceViewData.clear();
-    const gameWrapper = document.getElementById("game-wrapper");
-    const wrapperRect = gameWrapper.getBoundingClientRect();
     const boardRect = this.ui.board.getBoundingClientRect();
-
-    const spaceTop = boardRect.top - wrapperRect.top;
     const spaceBottom = wrapperRect.bottom - boardRect.bottom;
     const spaceLeft = boardRect.left - wrapperRect.left;
     const spaceRight = wrapperRect.right - boardRect.right;
@@ -143,40 +162,30 @@ export default class View {
           pieceView.posY = savedView.posY;
         }
       } else {
-        if (spaceLeft + spaceRight > this.pieceSize * 2) {
+        if (prefersSides) {
           if (Math.random() < 0.5 && spaceLeft > this.pieceSize) {
             pieceView.posX =
-              -spaceLeft + Math.random() * (spaceLeft - pieceView.size);
-          } else if (spaceRight > this.pieceSize) {
-            pieceView.posX =
-              this.boardSize + Math.random() * (spaceRight - pieceView.size);
-          } else if (spaceLeft > this.pieceSize) {
-            pieceView.posX =
-              -spaceLeft + Math.random() * (spaceLeft - pieceView.size);
+              -spaceLeft + Math.random() * (spaceLeft - this.pieceSize);
+            pieceView.posY = Math.random() * (this.boardSize - this.pieceSize);
           } else {
-            pieceView.posY =
-              this.boardSize + Math.random() * (spaceBottom - pieceView.size);
+            pieceView.posX =
+              this.boardSize + Math.random() * (spaceRight - this.pieceSize);
+            pieceView.posY = Math.random() * (this.boardSize - this.pieceSize);
           }
-          pieceView.posY = Math.random() * (this.boardSize - pieceView.size);
         } else {
-          if (Math.random() < 0.5 && spaceTop > this.pieceSize) {
+          pieceView.posX = Math.random() * (this.boardSize - this.pieceSize);
+          if (spaceBottom > this.pieceSize) {
             pieceView.posY =
-              -spaceTop + Math.random() * (spaceTop - pieceView.size);
-          } else if (spaceBottom > this.pieceSize) {
-            pieceView.posY =
-              this.boardSize + Math.random() * (spaceBottom - pieceView.size);
-          } else if (spaceTop > this.pieceSize) {
-            pieceView.posY =
-              -spaceTop + Math.random() * (spaceTop - pieceView.size);
+              this.boardSize + Math.random() * (spaceBottom - this.pieceSize);
           } else {
-            pieceView.posX =
-              this.boardSize + Math.random() * (spaceRight - pieceView.size);
+            pieceView.posY = Math.random() * (this.boardSize - this.pieceSize);
           }
-          pieceView.posX = Math.random() * (this.boardSize - pieceView.size);
         }
       }
       this.pieceViewData.set(piece.id, pieceView);
     }
+    
+    this.previousBoardSize = this.boardSize;
     this.renderer.setPieceViewData(this.pieceViewData);
     this.renderer.updateDimensions(
       this.boardSize,
@@ -239,13 +248,40 @@ export default class View {
   }
 
   handleRecalculate() {
+    const oldBoardSize = this.previousBoardSize;
     const grid = this.game.grid;
-    this.boardSize = this.ui.board.clientWidth;
+    const gameWrapper = document.getElementById("game-wrapper");
+    const wrapperRect = gameWrapper.getBoundingClientRect();
+
+    const prefersSides = wrapperRect.width > wrapperRect.height && wrapperRect.width > 700;
+
+    if (prefersSides) {
+      gameWrapper.style.alignItems = "center";
+      const pieceAreaWidth = Math.min(wrapperRect.width * 0.4, 300);
+      const maxBoardSizeFromHeight = wrapperRect.height - 20;
+      const maxBoardSizeFromWidth = wrapperRect.width - pieceAreaWidth - 20;
+      this.boardSize = Math.floor(
+        Math.min(maxBoardSizeFromHeight, maxBoardSizeFromWidth),
+      );
+    } else {
+      gameWrapper.style.alignItems = "flex-start";
+      const pieceAreaHeight = Math.min(wrapperRect.height * 0.3, 150);
+      const maxBoardSizeFromWidth = wrapperRect.width - 20;
+      const maxBoardSizeFromHeight =
+        wrapperRect.height - pieceAreaHeight - 20;
+      this.boardSize = Math.floor(
+        Math.min(maxBoardSizeFromWidth, maxBoardSizeFromHeight),
+      );
+    }
+
+    this.ui.board.style.width = this.boardSize + "px";
+    this.ui.board.style.height = this.boardSize + "px";
+    
+    const scaleFactor = oldBoardSize ? this.boardSize / oldBoardSize : 1;
     this.pieceSize = this.boardSize / grid;
     this.ui.board.style.setProperty("--grid-size", grid);
 
     const imgAR = this.scaledImageWidth / this.scaledImageHeight;
-
     if (imgAR > 1) {
       this.scaledImageHeight = this.boardSize;
       this.scaledImageWidth = this.scaledImageHeight * imgAR;
@@ -254,10 +290,7 @@ export default class View {
       this.scaledImageHeight = this.scaledImageWidth / imgAR;
     }
 
-    const gameWrapper = document.getElementById("game-wrapper");
-    const wrapperRect = gameWrapper.getBoundingClientRect();
     const boardRect = this.ui.board.getBoundingClientRect();
-    const spaceTop = boardRect.top - wrapperRect.top;
     const spaceBottom = wrapperRect.bottom - boardRect.bottom;
     const spaceLeft = boardRect.left - wrapperRect.left;
     const spaceRight = wrapperRect.right - boardRect.right;
@@ -268,35 +301,24 @@ export default class View {
         pieceView.posX = pieceView.piece.position.x * this.pieceSize;
         pieceView.posY = pieceView.piece.position.y * this.pieceSize;
       } else {
-        if (pieceView.posX < 0) {
-          pieceView.posX = clamp(
-            -spaceLeft + Math.random() * (spaceLeft - pieceView.size),
-            -spaceLeft,
-            -pieceView.size,
-          );
-        } else if (pieceView.posX > this.boardSize) {
-          pieceView.posX = clamp(
-            this.boardSize + Math.random() * (spaceRight - pieceView.size),
-            this.boardSize,
-            this.boardSize + spaceRight - pieceView.size,
-          );
-        }
+        pieceView.posX *= scaleFactor;
+        pieceView.posY *= scaleFactor;
 
-        if (pieceView.posY < 0) {
-          pieceView.posY = clamp(
-            -spaceTop + Math.random() * (spaceTop - pieceView.size),
-            -spaceTop,
-            -pieceView.size,
-          );
-        } else if (pieceView.posY > this.boardSize) {
-          pieceView.posY = clamp(
-            this.boardSize + Math.random() * (spaceBottom - pieceView.size),
-            this.boardSize,
-            this.boardSize + spaceBottom - pieceView.size,
-          );
+        if (prefersSides) {
+            if (pieceView.posX < this.boardSize / 2) {
+                pieceView.posX = clamp(pieceView.posX, -spaceLeft, -pieceView.size);
+            } else {
+                pieceView.posX = clamp(pieceView.posX, this.boardSize, this.boardSize + spaceRight - pieceView.size);
+            }
+            pieceView.posY = clamp(pieceView.posY, 0, this.boardSize-pieceView.size);
+        } else {
+            pieceView.posY = clamp(pieceView.posY, this.boardSize, this.boardSize + spaceBottom - pieceView.size);
+            pieceView.posX = clamp(pieceView.posX, 0, this.boardSize - pieceView.size);
         }
       }
     }
+
+    this.previousBoardSize = this.boardSize;
     this.renderer.updateDimensions(
       this.boardSize,
       this.pieceSize,

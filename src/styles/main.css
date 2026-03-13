@@ -37,7 +37,7 @@ body {
 #game-wrapper {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   position: relative;
   overflow: auto; /* Allow scrolling if content overflows */
   min-height: 0; /*  */
